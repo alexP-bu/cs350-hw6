@@ -4,6 +4,10 @@ import java.io.FileReader;
 import java.util.LinkedList;
 import java.util.Queue;
 
+/**
+ * Solution to HW-6 as the hw states - however, this is slow
+ */
+
 public class Dispatcher extends Thread{
 
     private Queue<String> workQueue = new LinkedList<String>();
@@ -29,7 +33,8 @@ public class Dispatcher extends Thread{
 
     public void dispatch(String hash){
         workQueue.add(hash);
-        //if theres workers available and jobs in the queue,
+        //if there are jobs in the queue but not available workers, keep running until the workers
+        //result in a value or time out
         while(!workQueue.isEmpty()){
             if((Thread.activeCount() < totCPUs)){
                 Worker t = new Worker(workQueue.remove(), timeout);
