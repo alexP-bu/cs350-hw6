@@ -11,7 +11,10 @@ import java.util.Vector;
  * We can speed this up by having some workers generating the dictionary, and another few workers
  * selecting jobs from the queue
  * 
- * AVG runtime for hashes.txt: 
+ * runtimes for this version (ms):
+ * 11662
+ * 11714
+ * 11647
  */
 
 public class Dispatcher extends Thread{
@@ -47,7 +50,7 @@ public class Dispatcher extends Thread{
             }
         }
         //for debugging
-        //System.out.println("RUNTIME: " + (System.currentTimeMillis() - startTime));
+        System.out.println("RUNTIME: " + (System.currentTimeMillis() - startTime));
     }
 
     public void dispatch(String hash){
