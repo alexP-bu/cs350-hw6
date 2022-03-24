@@ -6,6 +6,9 @@ import java.util.Queue;
 
 /**
  * Solution to HW-6 as the hw states - however, this is slow
+ * This is because each worker is generating its own brute force method until it finds a hash.
+ * We can speed this up by having some workers generating the dictionary, and another few workers
+ * selecting jobs from the queue
  */
 
 public class Dispatcher extends Thread{
