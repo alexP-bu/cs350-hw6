@@ -3,26 +3,31 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Vector;
 
 /**
  * Solution to HW-6 as the hw states - however, this is slow. 
  * This is because each worker is generating its own brute force method until it finds a hash.
  * We can speed this up by having some workers generating the dictionary, and another few workers
  * selecting jobs from the queue
+ * 
+ * AVG runtime for hashes.txt: 
  */
 
 public class Dispatcher extends Thread{
 
     private Queue<String> workQueue = new LinkedList<String>();
+    private Vector<Worker> workers = new Vector<>();
     private int totCPUs;
     private long timeout;
-
+    
     public Dispatcher(int cpus, long timeout){
         this.totCPUs = cpus;
         this.timeout = timeout;
     }
 
     public void unhashFromFile(String path){
+        long startTime = System.currentTimeMillis();
         try(BufferedReader br = new BufferedReader(new FileReader(new File(path)))){
             String line = br.readLine();
             while(line != null){
@@ -32,6 +37,17 @@ public class Dispatcher extends Thread{
         } catch(Exception e){
           e.printStackTrace();
         }
+
+        //wait for workers to finish at end of file
+        for(Worker w : workers){
+            try{
+                w.join();
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        //for debugging
+        //System.out.println("RUNTIME: " + (System.currentTimeMillis() - startTime));
     }
 
     public void dispatch(String hash){
@@ -42,6 +58,7 @@ public class Dispatcher extends Thread{
             if((Thread.activeCount() < totCPUs)){
                 Worker t = new Worker(workQueue.remove(), timeout);
                 t.start();
+                workers.add(t);
             }
         }
     }
