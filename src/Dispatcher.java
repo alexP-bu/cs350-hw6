@@ -38,7 +38,7 @@ public class Dispatcher extends Thread{
           e.printStackTrace();
         }
 
-        //wait for workers to finish at end of file
+        //wait for workers to finish at end of file, just for safety
         for(Worker w : workers){
             try{
                 w.join();
