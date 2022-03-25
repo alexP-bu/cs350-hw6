@@ -1,30 +1,40 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Vector;
-
 /**
- * Solution to HW-6 as the hw states - however, this is slow. 
- * This is because each worker is generating its own brute force method until it finds a hash.
- * We can speed this up by having some workers generating the dictionary, and another few workers
- * selecting jobs from the queue
+ * Upgrade 1; using a concurrenthashmap to not have to recompute values
+ * Runtimes with one generator:
+ * 12935
+ * 13131
+ * 12950
+ * Runtimes with two generators:
+ * 12974
  * 
- * runtimes for this version (ms):
- * 11662
- * 11714
- * 11647
  */
 
 public class Dispatcher extends Thread{
 
-    private Queue<String> workQueue = new LinkedList<String>();
-    private Vector<Worker> workers = new Vector<>();
+    private Queue<String> workQueue;
+    private Vector<Worker> workers;
+    private Vector<Generator> generators;
     private int totCPUs;
     private long timeout;
+
+    Map<String, Integer> generatedEvenHashes;
+    Map<String, Integer> generatedOddHashes;
     
     public Dispatcher(int cpus, long timeout){
+        this.generatedEvenHashes = new HashMap<>();
+        this.generatedOddHashes = new HashMap<>();
+        this.workQueue = new LinkedList<String>();
+        this.workers = new Vector<>();
+        this.generators = new Vector<>();
         this.totCPUs = cpus;
         this.timeout = timeout;
     }
@@ -33,6 +43,20 @@ public class Dispatcher extends Thread{
         long startTime = System.currentTimeMillis();
         try(BufferedReader br = new BufferedReader(new FileReader(new File(path)))){
             String line = br.readLine();
+            //lets send a generators to start generating hashes
+            //two generators - one generating odd numbers and one even
+            int numGenerators = 2;
+            for(int i = 0; i < numGenerators; i++){
+                Generator g;
+                if(i % 2 == 0){
+                    g = new Generator(generatedEvenHashes, GeneratorType.EVEN);
+                }else{
+                    g = new Generator(generatedOddHashes, GeneratorType.ODD);
+                }
+                g.start();
+                generators.add(g);
+            }
+            //read lines from file
             while(line != null){
                 this.dispatch(line);
                 line = br.readLine();
@@ -49,6 +73,10 @@ public class Dispatcher extends Thread{
                 e.printStackTrace();
             }
         }
+        //kill any generators running
+        for(Generator g : generators){
+            g.finished();
+        }
         //for debugging
         System.out.println("RUNTIME: " + (System.currentTimeMillis() - startTime));
     }
@@ -58,8 +86,8 @@ public class Dispatcher extends Thread{
         //if there are jobs in the queue but not available workers, keep running until the workers
         //result in a value or time out
         while(!workQueue.isEmpty()){
-            if((Thread.activeCount() < totCPUs)){
-                Worker t = new Worker(workQueue.remove(), timeout);
+            if((Thread.activeCount() - 2 < totCPUs)){
+                Worker t = new Worker(generatedEvenHashes, generatedOddHashes, workQueue.poll(), timeout);
                 t.start();
                 workers.add(t);
             }
