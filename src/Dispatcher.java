@@ -30,7 +30,6 @@ public class Dispatcher extends Thread{
     }
 
     public void unhashFromFile(String path){
-        long startTime = System.currentTimeMillis();
         try(BufferedReader br = new BufferedReader(new FileReader(new File(path)))){
             String line = br.readLine();
             while(line != null){
@@ -49,8 +48,6 @@ public class Dispatcher extends Thread{
                 e.printStackTrace();
             }
         }
-        //for debugging
-        System.out.println("RUNTIME: " + (System.currentTimeMillis() - startTime));
     }
 
     public void dispatch(String hash){
