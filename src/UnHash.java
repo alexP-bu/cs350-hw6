@@ -9,6 +9,10 @@ public class UnHash {
         this.hasher = new Hash();
     }
 
+    /** 
+     * @param hash
+     * @return Integer
+     */
     //unhash any hash for any algorithm tbh
     public Integer unhash(String hash){
         if(timeout == null){
