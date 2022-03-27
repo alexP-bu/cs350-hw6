@@ -1,4 +1,4 @@
-public class Worker extends Thread{
+public class Worker implements Runnable{
     
     private String hash;
     private UnHash unhasher;
@@ -11,7 +11,7 @@ public class Worker extends Thread{
 
     @Override
     public void run(){
-        if((result = unhasher.unhash(hash)) == null){
+        if((this.result = unhasher.unhash(hash)) == null){
             System.out.println(hash);
         }else{
             System.out.println(result);

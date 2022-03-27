@@ -7,13 +7,8 @@ import java.util.Queue;
 /**
  * Solution to HW-6 as the hw states - however, this is slow. 
  * This is because each worker is generating its own brute force method until it finds a hash.
- * We can speed this up by having some workers generating the dictionary, and another few workers
- * selecting jobs from the queue
- * 
- * runtimes for this version (ms):
- * 11662
- * 11714
- * 11647
+ * Can we speed this up with a hashmap so we dont have to recompute values?
+ * Or maybe have different workers that generate different parts of that hashmap?
  */
 
 public class Dispatcher{
@@ -34,7 +29,7 @@ public class Dispatcher{
         this.timeout = timeout;
     }
 
-
+    //read lines from file and dispatch them to the queue
     public void unhashFromFile(String path){
         try(BufferedReader br = new BufferedReader(new FileReader(new File(path)))){
             String line = br.readLine();
@@ -47,27 +42,29 @@ public class Dispatcher{
         }
     }
 
+    //add unit of work to work queue 
     public void dispatch(String hash){
         workQueue.add(hash);
-        //if there are jobs in the queue but not available workers, keep running until the workers
-        //result in a value or time out
+        //if there are jobs in the queue but not available workers, keep running until there 
+        //are no jobs left in the queue (workers aren't capped)
         while(!workQueue.isEmpty()){
             if(Thread.activeCount() < totCPUs){
-                Worker t = new Worker(workQueue.poll(), timeout);
-                t.start();
+                Thread thread = new Thread(new Worker(workQueue.poll(), timeout));
+                thread.start();
             }
         }
     }
 
     public static void main(String[] args) {
         //initialize dispatcher
-        Dispatcher d;
+        Dispatcher dispatcher;
+        //the submission portal is kinda buggy with the second argument
         if(args.length < 3){
-            d = new Dispatcher(Integer.valueOf(args[1]));
+            dispatcher = new Dispatcher(Integer.valueOf(args[1]));
         }else{
-            d = new Dispatcher(Integer.valueOf(args[1]), Long.valueOf(args[2]));
+            dispatcher = new Dispatcher(Integer.valueOf(args[1]), Long.valueOf(args[2]));
         }
         //import hashes into dispatcher
-        d.unhashFromFile(args[0]);
+        dispatcher.unhashFromFile(args[0]);
     }
 }
