@@ -4,7 +4,7 @@ public class Worker extends Thread{
     private UnHash unhasher;
     private Integer result;
 
-    Worker(String hash, long timeout){
+    Worker(String hash, Long timeout){
         this.hash = hash;
         this.unhasher = new UnHash(timeout);
     }

@@ -1,19 +1,25 @@
 public class UnHash {
     
     private Hash hasher;
+    private Long timeout; 
     private int cur;
-    private long timeout; //default timeout is 5s
 
-    public UnHash(long timeout){
+    public UnHash(Long timeout){
         this.timeout = timeout;
         this.hasher = new Hash();
     }
 
     //unhash any hash for any algorithm tbh
     public Integer unhash(String hash){
-        long endTime = System.currentTimeMillis() + timeout;
-        while(!hasher.hash(cur).equals(hash) && (System.currentTimeMillis() < endTime)){
-            cur++;
+        if(timeout == null){
+            while(!hasher.hash(cur).equals(hash)){
+                cur++;
+            }
+        }else{
+            long endTime = System.currentTimeMillis() + timeout;
+            while(!hasher.hash(cur).equals(hash) && (System.currentTimeMillis() < endTime)){
+                cur++;
+            }
         }
 
         if(hasher.hash(cur).equals(hash)){

@@ -3,7 +3,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.Vector;
 
 /**
  * Solution to HW-6 as the hw states - however, this is slow. 
@@ -17,17 +16,24 @@ import java.util.Vector;
  * 11647
  */
 
-public class Dispatcher extends Thread{
+public class Dispatcher{
 
-    private Queue<String> workQueue = new LinkedList<String>();
-    private Vector<Worker> workers = new Vector<>();
+    private Queue<String> workQueue;
+    private Long timeout;
     private int totCPUs;
-    private long timeout;
+
     
-    public Dispatcher(int cpus, long timeout){
+    public Dispatcher(int cpus){
+        this.workQueue = new LinkedList<>();
+        this.totCPUs = cpus;
+    }
+
+    public Dispatcher(int cpus, Long timeout){
+        this.workQueue = new LinkedList<>();
         this.totCPUs = cpus;
         this.timeout = timeout;
     }
+
 
     public void unhashFromFile(String path){
         try(BufferedReader br = new BufferedReader(new FileReader(new File(path)))){
@@ -39,15 +45,6 @@ public class Dispatcher extends Thread{
         } catch(Exception e){
           e.printStackTrace();
         }
-
-        //wait for workers to finish at end of file, just for safety
-        for(Worker w : workers){
-            try{
-                w.join();
-            } catch (Exception e){
-                e.printStackTrace();
-            }
-        }
     }
 
     public void dispatch(String hash){
@@ -55,17 +52,21 @@ public class Dispatcher extends Thread{
         //if there are jobs in the queue but not available workers, keep running until the workers
         //result in a value or time out
         while(!workQueue.isEmpty()){
-            if((Thread.activeCount() < totCPUs)){
-                Worker t = new Worker(workQueue.remove(), timeout);
+            if(Thread.activeCount() < totCPUs){
+                Worker t = new Worker(workQueue.poll(), timeout);
                 t.start();
-                workers.add(t);
             }
         }
     }
 
     public static void main(String[] args) {
         //initialize dispatcher
-        Dispatcher d = new Dispatcher(Integer.valueOf(args[1]), Long.valueOf(args[2]));
+        Dispatcher d;
+        if(args.length < 3){
+            d = new Dispatcher(Integer.valueOf(args[1]));
+        }else{
+            d = new Dispatcher(Integer.valueOf(args[1]), Long.valueOf(args[2]));
+        }
         //import hashes into dispatcher
         d.unhashFromFile(args[0]);
     }
