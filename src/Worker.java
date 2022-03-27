@@ -27,7 +27,12 @@ public class Worker implements Runnable{
                     break;
                 }
             }
-            System.out.println(result);
+
+            if(result == null){
+                System.out.println(hash);
+            }else{
+                System.out.println(result);
+            }
         }
     }
 }

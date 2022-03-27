@@ -25,7 +25,7 @@ public class Dispatcher{
      */
     //read lines from file and dispatch them to the queue
     public void unhashFromFile(String path){
-        long start = System.currentTimeMillis();
+        //long start = System.currentTimeMillis();
         try(BufferedReader br = new BufferedReader(new FileReader(new File(path)))){
             //send generator off to begin generating values in the hashmap
             Generator gen = new Generator();
@@ -51,7 +51,7 @@ public class Dispatcher{
                 e.printStackTrace();
             }
         }
-        System.out.println("RUNTIME: " + (System.currentTimeMillis() - start));
+        //System.out.println("RUNTIME: " + (System.currentTimeMillis() - start));
     }
 
     /** 
