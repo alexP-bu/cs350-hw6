@@ -16,7 +16,7 @@
             "request": "launch",
             "mainClass": "Dispatcher",
             "projectName": "cs350-hw6_3fc5adb8",
-            "args": "hashes.txt 8"
+            "args": "hashes.txt 8 10000"
         },
         {
             "type": "java",

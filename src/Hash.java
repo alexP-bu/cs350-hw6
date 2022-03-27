@@ -18,7 +18,7 @@ public class Hash {
      * @param hash
      * @return String
      */
-    String hash(int hash){
+    public String hash(int hash){
         //convert digest to string, found on stackoverflow
         return String.format("%032x", new BigInteger(1, md.digest(String.valueOf(hash).getBytes(StandardCharsets.UTF_8))));
     }

@@ -17,10 +17,9 @@ public class Dispatcher{
     private Long timeout;
     private int totCPUs;
 
-    public Dispatcher(int cpus, Long timeout){
+    public Dispatcher(int cpus){
         this.workQueue = new LinkedList<>();
         this.totCPUs = cpus;
-        this.timeout = timeout;
     }
 
     /** 
@@ -56,19 +55,26 @@ public class Dispatcher{
     }
 
     /** 
+     * @param timeout
+     */
+    public void setTimeout(Long timeout){
+        this.timeout = timeout;
+    }
+
+    /** 
      * @param args[0] file path
      * @param args[1] num cpus
      * @param args[2] OPTIONAL timeout
      */
     public static void main(String[] args) {
         //initialize dispatcher
-        Dispatcher dispatcher;
+        Dispatcher dispatcher = new Dispatcher(Integer.valueOf(args[1]));
+        
         //the submission portal is kinda buggy with the second argument
-        if(args.length < 3){    
-            dispatcher = new Dispatcher(Integer.valueOf(args[1]), null);
-        }else{
-            dispatcher = new Dispatcher(Integer.valueOf(args[1]), Long.valueOf(args[2]));
+        if(args.length > 2){
+            dispatcher.setTimeout(Long.valueOf(args[2]));
         }
+
         //import hashes into dispatcher
         dispatcher.unhashFromFile(args[0]);
     }
