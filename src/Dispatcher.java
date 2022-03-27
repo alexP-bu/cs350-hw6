@@ -2,23 +2,21 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
-
-/**
- * Solution to HW-6 as the hw states - however, this is slow. 
- * This is because each worker is generating its own brute force method until it finds a hash.
- * Can we speed this up with a hashmap so we dont have to recompute values?
- * Or maybe have different workers that generate different parts of that hashmap?
- */
-
+import java.util.Vector;
 public class Dispatcher{
 
     private Queue<String> workQueue;
+    private List<Generator> generators;
+    private List<Thread> workers;
     private Long timeout;
     private int totCPUs;
 
     public Dispatcher(int cpus){
         this.workQueue = new LinkedList<>();
+        this.generators = new Vector<>();
+        this.workers = new Vector<>();
         this.totCPUs = cpus;
     }
 
@@ -27,7 +25,14 @@ public class Dispatcher{
      */
     //read lines from file and dispatch them to the queue
     public void unhashFromFile(String path){
+        long start = System.currentTimeMillis();
         try(BufferedReader br = new BufferedReader(new FileReader(new File(path)))){
+            //send generator off to begin generating values in the hashmap
+            Generator gen = new Generator();
+            Thread genThread = new Thread(gen);
+            generators.add(gen);
+            genThread.start();
+            //read files
             String line = br.readLine();
             while(line != null){
                 this.dispatch(line);
@@ -36,6 +41,17 @@ public class Dispatcher{
         } catch(Exception e){
           e.printStackTrace();
         }
+        //stop all threads 
+        generators.get(0).stop();
+        for(Thread w : workers){
+            try {
+                w.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                e.printStackTrace();
+            }
+        }
+        System.out.println("RUNTIME: " + (System.currentTimeMillis() - start));
     }
 
     /** 
@@ -48,8 +64,9 @@ public class Dispatcher{
         //are no jobs left in the queue (workers aren't capped)
         while(!workQueue.isEmpty()){
             if(Thread.activeCount() < totCPUs){
-                Thread thread = new Thread(new Worker(workQueue.poll(), timeout));
-                thread.start();
+                Thread worker = new Thread(new Worker(workQueue.poll(), timeout, generators.get(0).getDictionary()));
+                workers.add(worker);
+                worker.start();
             }
         }
     }
