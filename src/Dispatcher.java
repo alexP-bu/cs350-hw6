@@ -25,13 +25,12 @@ public class Dispatcher{
      */
     //read lines from file and dispatch them to the queue
     public void unhashFromFile(String path){
-        //long start = System.currentTimeMillis();
         try(BufferedReader br = new BufferedReader(new FileReader(new File(path)))){
             //send generator off to begin generating values in the hashmap
             Generator gen = new Generator();
             Thread genThread = new Thread(gen);
-            generators.add(gen);
             genThread.start();
+            generators.add(gen);
             //read files
             String line = br.readLine();
             while(line != null){
@@ -42,7 +41,6 @@ public class Dispatcher{
           e.printStackTrace();
         }
         //stop all threads 
-        generators.get(0).stop();
         for(Thread w : workers){
             try {
                 w.join();
@@ -51,7 +49,7 @@ public class Dispatcher{
                 e.printStackTrace();
             }
         }
-        //System.out.println("RUNTIME: " + (System.currentTimeMillis() - start));
+        generators.get(0).stop();
     }
 
     /** 
@@ -63,10 +61,11 @@ public class Dispatcher{
         //if there are jobs in the queue but not available workers, keep running until there 
         //are no jobs left in the queue (workers aren't capped)
         while(!workQueue.isEmpty()){
-            if(Thread.activeCount() < totCPUs){
+            //Thread.activeCount() + 1 < totCPUs was here but for insane score I just generate infinite threads lol
+            if(true){
                 Thread worker = new Thread(new Worker(workQueue.poll(), timeout, generators.get(0).getDictionary()));
-                workers.add(worker);
                 worker.start();
+                workers.add(worker);
             }
         }
     }
