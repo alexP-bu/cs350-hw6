@@ -37,7 +37,7 @@ public class Dispatcher{
     /** 
      * @param path
      */
-    //read lines from file and dispatch them to the queue
+    //read file line by line and dispatch them to the queue
     public void unhashFromFile(String path){
         try(BufferedReader br = new BufferedReader(new FileReader(new File(path)))){
             //send generators off to begin generating values in the hashmap
