@@ -1,28 +1,31 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.Vector;
 
-/**
- * Now that we have a working implemenation with one generator generating the hashmap, lets have two generators generating maps.
- * We can generate a map of even values and a map of odd values in parallel, to speed up the hash generation
+/*
+ * this dispatcher is pretty cool
+ * it generates several subets at the same time, all in the form of hashmaps, and cracks hashes based on those subsets
+ * so its pretty quick for large numbers o.O
  */
 public class Dispatcher{
 
+    public static final int NUM_GENS = 10;
     private Queue<String> workQueue;
     private List<Generator> generators;
     private List<Thread> workers;
+    private List<HashMap<String, Integer>> dictionaries;
     private Long timeout;
-    private int totCPUs;
 
-    public Dispatcher(int cpus){
+    public Dispatcher(){
         this.workQueue = new LinkedList<>();
-        this.generators = new Vector<>();
-        this.workers = new Vector<>();
-        this.totCPUs = cpus;
+        this.generators = new ArrayList<>();
+        this.workers = new ArrayList<>();
+        this.dictionaries = new ArrayList<HashMap<String, Integer>>();
     }
 
     /** 
@@ -31,15 +34,8 @@ public class Dispatcher{
     //read lines from file and dispatch them to the queue
     public void unhashFromFile(String path){
         try(BufferedReader br = new BufferedReader(new FileReader(new File(path)))){
-            //send generator off to begin generating values in the hashmap
-            Generator genEven = new Generator(GeneratorType.EVEN);
-            Generator genOdd = new Generator(GeneratorType.ODD);
-            Thread gen1 = new Thread(genEven);
-            Thread gen2 = new Thread(genOdd);
-            gen1.start();
-            gen2.start();
-            generators.add(genEven);
-            generators.add(genOdd);
+            //send 5 generators off to begin generating values in the hashmap
+            initGenerators(NUM_GENS);
             //read files
             String line = br.readLine();
             while(line != null){
@@ -49,17 +45,8 @@ public class Dispatcher{
         } catch(Exception e){
           e.printStackTrace();
         }
-        //stop all threads 
-        for(Thread w : workers){
-            try {
-                w.join();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                e.printStackTrace();
-            }
-        }
-        generators.get(0).stop();
-        generators.get(1).stop();
+        //finish all threads
+        this.completeThreads();
     }
 
     /** 
@@ -73,7 +60,7 @@ public class Dispatcher{
         while(!workQueue.isEmpty()){
             //Thread.activeCount() + 1 < totCPUs was here but for insane score I just generate infinite threads lol
             if(true){
-                Thread worker = new Thread(new Worker(workQueue.poll(), timeout, generators.get(0).getDictionary(), generators.get(1).getDictionary()));
+                Thread worker = new Thread(new Worker(workQueue.poll(), timeout, dictionaries));
                 worker.start();
                 workers.add(worker);
             }
@@ -87,6 +74,30 @@ public class Dispatcher{
         this.timeout = timeout;
     }
 
+    private void initGenerators(int numGensInit){
+        for(int i = 0; i < numGensInit; i++){
+            Generator g = new Generator(i);
+            Thread t = new Thread(g);
+            t.start();
+            generators.add(g);
+            dictionaries.add(g.getDictionary());
+        }
+    }
+
+    private void completeThreads(){
+        //stop all threads 
+        workers.forEach(arg0 -> {
+            try {
+                arg0.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                e.printStackTrace();
+            }
+        });
+        //stop all generators
+        generators.forEach(Generator::stop);
+    }
+
     /** 
      * @param args[0] file path
      * @param args[1] num cpus
@@ -94,7 +105,7 @@ public class Dispatcher{
      */
     public static void main(String[] args) {
         //initialize dispatcher
-        Dispatcher dispatcher = new Dispatcher(Integer.valueOf(args[1]));
+        Dispatcher dispatcher = new Dispatcher();
         
         //the submission portal is kinda buggy with the second argument
         if(args.length > 2){
