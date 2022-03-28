@@ -5,6 +5,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Vector;
+
+/**
+ * Now that we have a working implemenation with one generator generating the hashmap, lets have two generators generating maps.
+ * We can generate a map of even values and a map of odd values in parallel, to speed up the hash generation
+ */
 public class Dispatcher{
 
     private Queue<String> workQueue;
@@ -27,10 +32,14 @@ public class Dispatcher{
     public void unhashFromFile(String path){
         try(BufferedReader br = new BufferedReader(new FileReader(new File(path)))){
             //send generator off to begin generating values in the hashmap
-            Generator gen = new Generator();
-            Thread genThread = new Thread(gen);
-            genThread.start();
-            generators.add(gen);
+            Generator genEven = new Generator(GeneratorType.EVEN);
+            Generator genOdd = new Generator(GeneratorType.ODD);
+            Thread gen1 = new Thread(genEven);
+            Thread gen2 = new Thread(genOdd);
+            gen1.start();
+            gen2.start();
+            generators.add(genEven);
+            generators.add(genOdd);
             //read files
             String line = br.readLine();
             while(line != null){
@@ -50,6 +59,7 @@ public class Dispatcher{
             }
         }
         generators.get(0).stop();
+        generators.get(1).stop();
     }
 
     /** 
@@ -63,7 +73,7 @@ public class Dispatcher{
         while(!workQueue.isEmpty()){
             //Thread.activeCount() + 1 < totCPUs was here but for insane score I just generate infinite threads lol
             if(true){
-                Thread worker = new Thread(new Worker(workQueue.poll(), timeout, generators.get(0).getDictionary()));
+                Thread worker = new Thread(new Worker(workQueue.poll(), timeout, generators.get(0).getDictionary(), generators.get(1).getDictionary()));
                 worker.start();
                 workers.add(worker);
             }
