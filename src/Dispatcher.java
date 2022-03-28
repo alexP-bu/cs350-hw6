@@ -5,9 +5,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 
 /*
@@ -21,7 +21,7 @@ public class Dispatcher{
     private Queue<String> workQueue;
     private List<Generator> generators;
     private List<Thread> workers;
-    private List<HashMap<String, Integer>> dictionaries;
+    private List<Map<String, Integer>> dictionaries;
     private Long timeout;
 
     //final optimization: let's write everything to a buffered writer and spit it out at the end
@@ -31,7 +31,7 @@ public class Dispatcher{
         this.workQueue = new LinkedList<>();
         this.generators = new ArrayList<>();
         this.workers = new ArrayList<>();
-        this.dictionaries = new ArrayList<HashMap<String, Integer>>();
+        this.dictionaries = new ArrayList<Map<String, Integer>>();
     }
 
     /** 
@@ -40,7 +40,7 @@ public class Dispatcher{
     //read lines from file and dispatch them to the queue
     public void unhashFromFile(String path){
         try(BufferedReader br = new BufferedReader(new FileReader(new File(path)))){
-            //send 5 generators off to begin generating values in the hashmap
+            //send generators off to begin generating values in the hashmap
             initGenerators(NUM_GENS);
             //read files
             String line = br.readLine();
@@ -101,9 +101,9 @@ public class Dispatcher{
 
     private void completeThreads(){
         //stop all workers 
-        workers.forEach(arg0 -> {
+        workers.stream().forEach(thread -> {
             try {
-                arg0.join();
+                thread.join();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 e.printStackTrace();

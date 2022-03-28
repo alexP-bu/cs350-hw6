@@ -1,8 +1,9 @@
 import java.util.HashMap;
+import java.util.Map;
 
 public class Generator implements Runnable{
     
-    private HashMap<String, Integer> dictionary = new HashMap<>(6_000);
+    private Map<String, Integer> dictionary = new HashMap<>(10_000);
     private final Hash hasher = new Hash();
     private boolean running = true;
     private int id;
@@ -11,7 +12,7 @@ public class Generator implements Runnable{
         this.id = id;
     }
 
-    public HashMap<String, Integer> getDictionary(){
+    public Map<String, Integer> getDictionary(){
         return dictionary;
     }
 

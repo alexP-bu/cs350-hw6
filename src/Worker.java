@@ -1,21 +1,21 @@
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Worker implements Runnable{
     
     private String hash;
     private Long timeout;
     private Integer result = null;
-    private List<HashMap<String, Integer>> dictionaries;
+    private List<Map<String, Integer>> dictionaries;
 
-    Worker(String hash, Long timeout, List<HashMap<String,Integer>> dictionaries){
+    Worker(String hash, Long timeout, List<Map<String,Integer>> dictionaries){
         this.hash = hash;
         this.dictionaries = dictionaries;
         this.timeout = timeout;
     }
 
     private void attemptUpdateResult(){
-        for (HashMap<String,Integer> map : dictionaries) {
+        for (Map<String,Integer> map : dictionaries) {
             if(map.containsKey(hash)){
                 result = map.get(hash);
                 break;
