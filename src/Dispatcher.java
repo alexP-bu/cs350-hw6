@@ -1,6 +1,9 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -20,6 +23,9 @@ public class Dispatcher{
     private List<Thread> workers;
     private List<HashMap<String, Integer>> dictionaries;
     private Long timeout;
+
+    //final optimization: let's write everything to a buffered writer and spit it out at the end
+    public static BufferedWriter printer = new BufferedWriter(new OutputStreamWriter(System.out));
 
     public Dispatcher(){
         this.workQueue = new LinkedList<>();
@@ -47,6 +53,11 @@ public class Dispatcher{
         }
         //finish all threads
         this.completeThreads();
+        try{
+            printer.flush();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     /** 
@@ -96,6 +107,14 @@ public class Dispatcher{
         });
         //stop all generators
         generators.forEach(Generator::stop);
+    }
+
+    public static void writeToOutput(String s){
+        try {
+            printer.write(s + "\n");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /** 

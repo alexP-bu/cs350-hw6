@@ -37,9 +37,9 @@ public class Worker implements Runnable{
         }
 
         if(result == null){
-            System.out.println(hash);
+            Dispatcher.writeToOutput(hash);
         }else{
-            System.out.println(result);
+            Dispatcher.writeToOutput(String.valueOf(result));
         }
     }
 }
