@@ -61,7 +61,7 @@ public class Dispatcher{
         //if there are jobs in the queue but not available workers, keep running until there 
         //are no jobs left in the queue (workers aren't capped)
         while(!workQueue.isEmpty()){
-            //Thread.activeCount() + 1 < totCPUs was here but for insane score I just generate infinite threads lol
+            //Thread.activeCount() + 1 < totCPUs was here but for insane score I just generate as many threads as strings lol
             if(true){
                 Thread worker = new Thread(new Worker(workQueue.poll(), timeout, generators.get(0).getDictionary()));
                 worker.start();
