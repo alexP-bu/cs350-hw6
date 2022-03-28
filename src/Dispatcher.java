@@ -85,6 +85,10 @@ public class Dispatcher{
         this.timeout = timeout;
     }
 
+    
+    /** 
+     * @param numGensInit
+     */
     private void initGenerators(int numGensInit){
         for(int i = 0; i < numGensInit; i++){
             Generator g = new Generator(i);
@@ -96,7 +100,7 @@ public class Dispatcher{
     }
 
     private void completeThreads(){
-        //stop all threads 
+        //stop all workers 
         workers.forEach(arg0 -> {
             try {
                 arg0.join();
@@ -109,6 +113,10 @@ public class Dispatcher{
         generators.forEach(Generator::stop);
     }
 
+    
+    /** 
+     * @param s
+     */
     public static void writeToOutput(String s){
         try {
             printer.write(s + "\n");

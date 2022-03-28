@@ -2,7 +2,7 @@ import java.util.HashMap;
 
 public class Generator implements Runnable{
     
-    private HashMap<String, Integer> dictionary = new HashMap<>(5_000);
+    private HashMap<String, Integer> dictionary = new HashMap<>(6_000);
     private final Hash hasher = new Hash();
     private boolean running = true;
     private int id;
