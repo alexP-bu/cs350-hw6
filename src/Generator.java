@@ -3,13 +3,16 @@ import java.util.Map;
 
 public class Generator implements Runnable{
     
-    private Map<String, Integer> dictionary = new HashMap<>(10_000);
-    private final Hash hasher = new Hash();
-    private boolean running = true;
+    private Map<String, Integer> dictionary;
+    private final Hash hasher;
+    private boolean running;
     private int id;
 
     public Generator(int id){
         this.id = id;
+        this.dictionary = new HashMap<String, Integer>(10_000, 0.95f);
+        this.hasher = new Hash();
+        this.running = true;
     }
 
     public Map<String, Integer> getDictionary(){
@@ -22,12 +25,10 @@ public class Generator implements Runnable{
     
     @Override
     public void run(){
-        int i;
-        i = this.id;
-        
+        int i = this.id;
         while(running){
             dictionary.put(hasher.hash(i), i);
-            i += Dispatcher.NUM_GENS; //5 generators
+            i += Dispatcher.NUM_GENS; //increment by number of generators
         }
     }
 }
