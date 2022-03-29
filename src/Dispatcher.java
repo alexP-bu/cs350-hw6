@@ -17,6 +17,10 @@ import java.util.stream.Stream;
  * it generates several subets at the same time, all in the form of hashmaps, and cracks hashes based on those subsets
  * so its pretty quick for large numbers o.O
  */
+
+ /*
+ * Oh, and lots of lambda expressions
+ */
 public class Dispatcher {
 
     public static final int NUM_GENS = 10; //number of generators generating hashmap subsets 
@@ -138,6 +142,7 @@ public class Dispatcher {
         }
         // import hashes into dispatcher
         dispatcher.unhashFromFile(args[0]);
+        //print output
         try {
             printer.flush();
         } catch (IOException e) {
