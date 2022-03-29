@@ -4,10 +4,12 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
+import java.util.Vector;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 /*
  * this dispatcher is pretty cool
@@ -16,9 +18,9 @@ import java.util.Queue;
  */
 public class Dispatcher {
 
-    public static final int NUM_GENS = 10; //number of generators generating hashmap subsets
-    private Queue<String> workQueue;
-    private List<Generator> generators; //no need to use vector! we are only getting concurrently
+    public static final int NUM_GENS = 10; //number of generators generating hashmap subsets 
+    private BlockingQueue<String> workQueue;
+    private List<Generator> generators;
     private List<Thread> workerThreads;
     private Long timeout;
 
@@ -27,9 +29,9 @@ public class Dispatcher {
     public static final BufferedWriter printer = new BufferedWriter(new OutputStreamWriter(System.out));
 
     public Dispatcher() {
-        this.workQueue = new LinkedList<>();
-        this.generators = new ArrayList<>();
-        this.workerThreads = new ArrayList<>();
+        this.workQueue = new LinkedBlockingQueue<>();
+        this.generators = new Vector<>();
+        this.workerThreads = new Vector<>();
     }
 
     /**
@@ -42,11 +44,14 @@ public class Dispatcher {
             initGenerators(NUM_GENS);
             //read lines with fancy lambda :o
             br
-                .lines()
-                .forEach(this::dispatch); //for each line, dispatch the line to the queue
+            .lines()
+            .parallel()
+            .forEach(line -> workQueue.add(line));
         } catch (Exception e) {
             e.printStackTrace();
         }
+        //dispatch
+        this.dispatch();
         // ensure all threads finish
         this.completeThreads();
     }
@@ -54,18 +59,14 @@ public class Dispatcher {
     /**
      * @param hash
      */
-    public void dispatch(String hash) {
-        workQueue.add(hash);
-        // if there are jobs in the queue but not available workers, keep running until
-        // there are no jobs left in the queue (workers aren't capped)
-        while (!workQueue.isEmpty()) {
-            // Thread.activeCount() + 1 < totCPUs was here but for insane score I just generate infinite threads lol
-            if (true) {
-                Thread worker = new Thread(new Worker(workQueue.poll(), timeout, generators));
-                worker.start();
-                workerThreads.add(worker);
-            }
-        }
+    public void dispatch() {
+        workerThreads = Stream
+                            .generate(() -> new Thread(new Worker(workQueue.poll(), timeout, generators)))
+                            .limit(workQueue.size())
+                            .toList();
+        workerThreads
+            .parallelStream()
+            .forEach(Thread::start);
     }
 
     /**
@@ -79,29 +80,35 @@ public class Dispatcher {
      * @param numGensInit
      */
     private void initGenerators(int numGensInit) {
-        for (int i = 0; i < numGensInit; i++) {
-            Generator g = new Generator(i);
-            Thread t = new Thread(g);
-            t.start();
-            generators.add(g);
-        }
+        AtomicInteger a = new AtomicInteger(0);
+        this.generators = Stream
+                            .generate(() -> new Generator(a.getAndIncrement()))
+                            .limit(numGensInit++)
+                            .toList();
+
+        generators
+            .parallelStream()
+            .forEach(generator -> {
+                        Thread t = new Thread(generator);
+                        t.start();
+                    }
+            );
     }
 
     private void completeThreads() {
-        // stop all workers
         workerThreads
-            .stream()
+            .parallelStream()
             .forEach(thread -> {
                 try {
                     thread.join();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 e.printStackTrace();
-                }
+            }
         });
-        // stop all generators
+
         generators
-            .stream()
+            .parallelStream()
             .forEach(Generator::stop);
     }
 

@@ -1,1 +1,1 @@
-The Subset-ized Multithreaded Lambda-ized Version of HW6's Integer HashCracker
+The Subset-ized Multithreaded Lambda-ized Version of HW6's Integer Hash Cracker
