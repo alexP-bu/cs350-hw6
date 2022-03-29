@@ -15,6 +15,10 @@ public class Generator implements Runnable{
         this.running = true;
     }
 
+    
+    /** 
+     * @return Map<String, Integer>
+     */
     public Map<String, Integer> getDictionary(){
         return dictionary;
     }

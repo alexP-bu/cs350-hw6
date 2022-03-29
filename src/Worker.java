@@ -13,6 +13,10 @@ public class Worker implements Runnable {
         this.generators = generators;
     }
 
+    
+    /** 
+     * @return Integer
+     */
     private Integer attemptUpdateResult() {
         //let's try some fancy lambda stuff for fun :)
             

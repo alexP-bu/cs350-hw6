@@ -9,6 +9,7 @@ import java.util.Vector;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /*
@@ -38,15 +39,12 @@ public class Dispatcher {
      * @param path
      */
     // read file line by line and dispatch them to the queue
-    public void unhashFromFile(String path) throws IOException {
+    public void unhashFromFile(String path) {
         try (BufferedReader br = new BufferedReader(new FileReader(new File(path)))) {
             // send generators off to begin generating values in the hashmap
             initGenerators(NUM_GENS);
             //read lines with fancy lambda :o
-            br
-            .lines()
-            .parallel()
-            .forEach(line -> workQueue.add(line));
+            br.lines().parallel().forEach(line -> workQueue.add(line));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -61,12 +59,13 @@ public class Dispatcher {
      */
     public void dispatch() {
         workerThreads = Stream
-                            .generate(() -> new Thread(new Worker(workQueue.poll(), timeout, generators)))
+                            .generate(() -> {
+                                Thread t = new Thread(new Worker(workQueue.poll(), timeout, generators));
+                                t.start();
+                                return t;
+                            })
                             .limit(workQueue.size())
-                            .toList();
-        workerThreads
-            .parallelStream()
-            .forEach(Thread::start);
+                            .collect(Collectors.toList());
     }
 
     /**
@@ -84,7 +83,7 @@ public class Dispatcher {
         this.generators = Stream
                             .generate(() -> new Generator(a.getAndIncrement()))
                             .limit(numGensInit++)
-                            .toList();
+                            .collect(Collectors.toList());
 
         generators
             .parallelStream()
@@ -127,8 +126,9 @@ public class Dispatcher {
      * @param args[0] file path
      * @param args[1] num cpus
      * @param args[2] OPTIONAL timeout
+     * @throws IOException
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         // initialize dispatcher
         Dispatcher dispatcher = new Dispatcher();
         // the submission portal is kinda buggy with the second argument
@@ -138,6 +138,10 @@ public class Dispatcher {
         }
         // import hashes into dispatcher
         dispatcher.unhashFromFile(args[0]);
-        printer.flush();
+        try {
+            printer.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
